@@ -21,12 +21,15 @@
     
     <div class="card p-4 rounded-4">
         <h5 class="mb-3">Cấu Hình GitHub</h5>
-        <input type="password" id="ghToken" class="form-control mb-3" placeholder="Dán GitHub Personal Access Token...">
+        <div class="input-group mb-3">
+            <input type="password" id="ghToken" class="form-control" placeholder="Dán GitHub Personal Access Token...">
+            <button class="btn btn-outline-danger" type="button" onclick="clearToken()" title="Xóa Token đã lưu">Xóa</button>
+        </div>
         <button id="loadBtn" class="btn btn-info w-100 fw-bold" onclick="fetchConfig()">
             <span id="loadSpinner" class="spinner-border spinner-border-sm d-none" aria-hidden="true"></span>
             <span id="loadText">Tải Cấu Hình</span>
         </button>
-        <div id="errorMsg" class="text-danger mt-2 small d-none"></div>
+        <div id="errorMsg" class="text-danger mt-3 small d-none text-center fw-bold"></div>
     </div>
 
     <div id="uiContainer" style="display: none;">
@@ -46,12 +49,27 @@
     window.fileSha = ''; 
     window.configData = {};
     
-    const repoPath = "ManhHero193/manhherohub/ConfigBss.loncho";
+    const repoPath = "ManhHero193/manhherohub/contents/ConfigBss.loncho";
     const fields = ["Sunflower Field", "Mushroom Field", "Clover Field", "Blue Flower Field", "Spider Field", "Strawberry Field", "Bamboo Field", "Pineapple Patch", "Cactus Field", "Pumpkin Patch", "Pine Tree Forest", "Rose Field", "Mountain Top Field", "Coconut Field", "Pepper Patch"];
     const sprinklers = ["Sprinkler Builder", "Silver Soakers", "Golden Gushers", "Diamond Drenchers", "The Supreme Saturator"];
 
     const b64DecodeUnicode = str => decodeURIComponent(Array.prototype.map.call(atob(str), c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
     const b64EncodeUnicode = str => btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
+
+    // Tự động tải Token đã lưu khi mở trang
+    document.addEventListener("DOMContentLoaded", () => {
+        const savedToken = localStorage.getItem("ghBssToken");
+        if (savedToken) {
+            document.getElementById("ghToken").value = savedToken;
+        }
+    });
+
+    // Hàm xóa token
+    function clearToken() {
+        localStorage.removeItem("ghBssToken");
+        document.getElementById("ghToken").value = "";
+        document.getElementById('uiContainer').style.display = 'none';
+    }
 
     function showError(msg) {
         const err = document.getElementById('errorMsg');
@@ -65,13 +83,17 @@
         document.getElementById(textId).textContent = isLoading ? ' Đang xử lý...' : originalText;
     }
 
-    // CÁC HÀM CẬP NHẬT DỮ LIỆU CHUYÊN DỤNG (Khắc phục lỗi không lưu)
+    // Các hàm cập nhật có thêm bảo vệ chống lỗi
     window.updateSelectValue = function(key, val) {
-        window.configData.states[key] = val;
+        if(window.configData && window.configData.states) {
+            window.configData.states[key] = val;
+        }
     };
 
     window.updateToggleValue = function(key, isChecked) {
-        window.configData.states[key] = isChecked;
+        if(window.configData && window.configData.states) {
+            window.configData.states[key] = isChecked;
+        }
     };
 
     async function fetchConfig() {
@@ -82,7 +104,6 @@
         toggleButtonState('loadBtn', 'loadSpinner', 'loadText', true, 'Tải Cấu Hình');
 
         try {
-            // Thêm Date.now() để chống trình duyệt cache file cũ
             const response = await fetch(`https://api.github.com/repos/${repoPath}?timestamp=${Date.now()}`, { 
                 headers: { 
                     'Authorization': `token ${token}`, 
@@ -95,7 +116,21 @@
             
             const data = await response.json();
             window.fileSha = data.sha;
-            window.configData = JSON.parse(b64DecodeUnicode(data.content));
+            
+            // Bắt lỗi nếu file trên Github bị hỏng định dạng JSON
+            try {
+                window.configData = JSON.parse(b64DecodeUnicode(data.content));
+            } catch (e) {
+                throw new Error("Lỗi đọc file: Dữ liệu trên GitHub không phải là JSON hợp lệ.");
+            }
+
+            // Bắt lỗi nếu cấu trúc JSON không đúng chuẩn
+            if (!window.configData || !window.configData.states) {
+                throw new Error("Cấu trúc file JSON không hợp lệ (Thiếu object 'states').");
+            }
+            
+            // Lưu token lại để lần sau không cần nhập
+            localStorage.setItem("ghBssToken", token);
             
             buildUI();
             document.getElementById('uiContainer').style.display = 'block';
@@ -147,9 +182,6 @@
         toggleButtonState('saveBtn', 'saveSpinner', 'saveText', true, 'LƯU & ĐỒNG BỘ');
 
         try {
-            // Hiển thị ra Console F12 để bạn chắc chắn dữ liệu đã được thay đổi
-            console.log("Dữ liệu chuẩn bị lưu:", window.configData);
-
             const response = await fetch(`https://api.github.com/repos/${repoPath}`, {
                 method: "PUT",
                 headers: { 
