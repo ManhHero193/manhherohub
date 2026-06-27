@@ -12,7 +12,7 @@
         "stinger": true,
         "glitter": true,
         "smoothie": true,
-        "tool": false,
+        "tool": true,
         "redExtract": false,
         "blueExtract": false,
         "enzymes": false,
