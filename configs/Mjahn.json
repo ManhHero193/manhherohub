@@ -3,7 +3,7 @@
         "autoFarmField": true,
         "selectedField": "Spider Field",
         "autoPuff": false,
-        "autoSprinkler": true,
+        "autoSprinkler": false,
         "sprinklerType": "The Supreme Saturator",
         "autoHoney": false,
         "speed": true,
