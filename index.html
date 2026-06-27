@@ -45,30 +45,30 @@
 </div>
 
 <script>
-    // Biến toàn cục
     window.fileSha = ''; 
     window.configData = {};
     
     const repoPath = "ManhHero193/manhherohub/contents/ConfigBss.loncho";
+    
     const fields = ["Sunflower Field", "Mushroom Field", "Clover Field", "Blue Flower Field", "Spider Field", "Strawberry Field", "Bamboo Field", "Pineapple Patch", "Cactus Field", "Pumpkin Patch", "Pine Tree Forest", "Rose Field", "Mountain Top Field", "Coconut Field", "Pepper Patch"];
     const sprinklers = ["Sprinkler Builder", "Silver Soakers", "Golden Gushers", "Diamond Drenchers", "The Supreme Saturator"];
 
-    const b64DecodeUnicode = str => decodeURIComponent(Array.prototype.map.call(atob(str), c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    const b64DecodeUnicode = str => {
+        const cleanStr = str.replace(/\s+/g, '');
+        return decodeURIComponent(Array.prototype.map.call(atob(cleanStr), c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    };
     const b64EncodeUnicode = str => btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
 
-    // Tự động tải Token đã lưu khi mở trang
     document.addEventListener("DOMContentLoaded", () => {
         const savedToken = localStorage.getItem("ghBssToken");
-        if (savedToken) {
-            document.getElementById("ghToken").value = savedToken;
-        }
+        if (savedToken) document.getElementById("ghToken").value = savedToken;
     });
 
-    // Hàm xóa token
     function clearToken() {
         localStorage.removeItem("ghBssToken");
         document.getElementById("ghToken").value = "";
         document.getElementById('uiContainer').style.display = 'none';
+        document.getElementById('errorMsg').classList.add('d-none');
     }
 
     function showError(msg) {
@@ -83,17 +83,12 @@
         document.getElementById(textId).textContent = isLoading ? ' Đang xử lý...' : originalText;
     }
 
-    // Các hàm cập nhật có thêm bảo vệ chống lỗi
     window.updateSelectValue = function(key, val) {
-        if(window.configData && window.configData.states) {
-            window.configData.states[key] = val;
-        }
+        if(window.configData?.states) window.configData.states[key] = val;
     };
 
     window.updateToggleValue = function(key, isChecked) {
-        if(window.configData && window.configData.states) {
-            window.configData.states[key] = isChecked;
-        }
+        if(window.configData?.states) window.configData.states[key] = isChecked;
     };
 
     async function fetchConfig() {
@@ -104,11 +99,128 @@
         toggleButtonState('loadBtn', 'loadSpinner', 'loadText', true, 'Tải Cấu Hình');
 
         try {
-            const response = await fetch(`https://api.github.com/repos/${repoPath}?timestamp=${Date.now()}`, { 
+            // Đã FIX: Dùng Bearer token và xóa các header/query parameter gây lỗi CORS
+            const response = await fetch(`https://api.github.com/repos/${repoPath}`, { 
+                method: 'GET',
+                cache: 'no-store', // Ép trình duyệt không cache file
                 headers: { 
-                    'Authorization': `token ${token}`, 
+                    'Authorization': `Bearer ${token}`, 
+                    'Accept': 'application/vnd.github.v3+json'
+                } 
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Lỗi API: ${response.status} (Kiểm tra lại Token hoặc Repo)`);
+            }
+            
+            const data = await response.json();
+            window.fileSha = data.sha;
+            
+            try {
+                window.configData = JSON.parse(b64DecodeUnicode(data.content));
+            } catch (e) {
+                throw new Error("Dữ liệu trên GitHub không phải là JSON hợp lệ.");
+            }
+
+            if (!window.configData || typeof window.configData.states !== 'object') {
+                window.configData.states = {}; 
+            }
+            
+            localStorage.setItem("ghBssToken", token);
+            buildUI();
+            document.getElementById('uiContainer').style.display = 'block';
+        } catch (error) {
+            // Thông báo lỗi chi tiết nếu dính "Failed to fetch"
+            if (error.message === 'Failed to fetch') {
+                showError("Lỗi kết nối mạng (Failed to fetch). Vui lòng tắt Adblock / Tiện ích chặn quảng cáo hoặc kiểm tra kết nối mạng.");
+            } else {
+                showError(error.message);
+            }
+            document.getElementById('uiContainer').style.display = 'none';
+        } finally {
+            toggleButtonState('loadBtn', 'loadSpinner', 'loadText', false, 'Tải Cấu Hình');
+        }
+    }
+
+    function buildUI() {
+        const container = document.getElementById('settingsContainer');
+        container.innerHTML = '';
+
+        const createSelect = (label, options, currentValue, key) => {
+            return `
+                <div class="mb-3">
+                    <label class="form-label text-info">${label}</label>
+                    <select class="form-select" onchange="window.updateSelectValue('${key}', this.value)">
+                        ${options.map(opt => `<option value="${opt}" ${currentValue === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                    </select>
+                </div>`;
+        };
+
+        container.innerHTML += createSelect("Cánh đồng (Field):", fields, window.configData.states.selectedField, "selectedField");
+        container.innerHTML += createSelect("Loại vòi phun (Sprinkler):", sprinklers, window.configData.states.sprinklerType, "sprinklerType");
+
+        const toggleBox = document.createElement('div');
+        toggleBox.className = "mt-4 pt-3 border-top border-secondary";
+        
+        for (const [key, value] of Object.entries(window.configData.states)) {
+            if (["webhookUrl", "selectedField", "sprinklerType"].includes(key)) continue;
+            
+            if (typeof value === 'boolean') {
+                const div = document.createElement('div');
+                div.className = 'form-check form-switch mb-2';
+                div.innerHTML = `
+                    <input class="form-check-input" type="checkbox" id="chk_${key}" ${value ? 'checked' : ''} onchange="window.updateToggleValue('${key}', this.checked)">
+                    <label class="form-check-label" for="chk_${key}">${key}</label>
+                `;
+                toggleBox.appendChild(div);
+            }
+        }
+        container.appendChild(toggleBox);
+    }
+
+    async function saveConfig() {
+        const token = document.getElementById('ghToken').value.trim();
+        toggleButtonState('saveBtn', 'saveSpinner', 'saveText', true, 'LƯU & ĐỒNG BỘ');
+
+        try {
+            // Đã FIX cấu trúc fetch để đồng bộ với hàm Load
+            const response = await fetch(`https://api.github.com/repos/${repoPath}`, {
+                method: "PUT",
+                headers: { 
+                    'Authorization': `Bearer ${token}`, 
                     'Accept': 'application/vnd.github.v3+json',
-                    'Cache-Control': 'no-cache'
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify({ 
+                    message: "Cập nhật cấu hình qua BSS Control Panel", 
+                    content: b64EncodeUnicode(JSON.stringify(window.configData, null, 4)), 
+                    sha: window.fileSha 
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Lỗi API: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            window.fileSha = data.content.sha; 
+            
+            alert("Đã lưu thành công lên Github! (Lưu ý: Nếu dùng link raw, Tool/Macro có thể mất 3-5 phút mới nhận cấu hình mới do GitHub cache).");
+        } catch (error) {
+             if (error.message === 'Failed to fetch') {
+                alert("Lưu thất bại: Mạng của bạn hoặc trình duyệt đang chặn kết nối (Adblock/Brave Shields).");
+            } else {
+                alert("Lưu thất bại: " + error.message);
+            }
+        } finally {
+            toggleButtonState('saveBtn', 'saveSpinner', 'saveText', false, 'LƯU & ĐỒNG BỘ');
+        }
+    }
+</script>
+</body>
+</html>
                 } 
             });
             
