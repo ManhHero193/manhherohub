@@ -1,7 +1,7 @@
 {
     "states": {
-        "autoFarmField": false,
-        "selectedField": "Spider Field",
+        "autoFarmField": true,
+        "selectedField": "Strawberry Field",
         "stinger": true,
         "glitter": true,
         "smoothie": true,
