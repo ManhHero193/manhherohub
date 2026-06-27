@@ -1,7 +1,7 @@
 {
     "states": {
-        "autoFarmField": false,
-        "selectedField": "Pumpkin Patch",
+        "autoFarmField": true,
+        "selectedField": "Spider Field",
         "stinger": true,
         "glitter": true,
         "smoothie": true,
