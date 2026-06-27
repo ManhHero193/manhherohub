@@ -1,0 +1,26 @@
+{
+    "states": {
+        "autoFarmField": true,
+        "selectedField": "Strawberry Field",
+        "autoPuff": false,
+        "autoSprinkler": false,
+        "sprinklerType": "The Supreme Saturator",
+        "autoHoney": false,
+        "speed": false,
+        "antiAfk": true,
+        "fpsBoost": false,
+        "stinger": true,
+        "glitter": true,
+        "smoothie": true,
+        "tool": false,
+        "redExtract": false,
+        "blueExtract": false,
+        "enzymes": false,
+        "oil": false,
+        "glue": false,
+        "autoPrecise": true,
+        "autoPreciseMark": true,
+        "autoStickBug": false
+    },
+    "times": {}
+}
