@@ -1,7 +1,7 @@
 {
     "states": {
-        "autoFarmField": false,
-        "selectedField": "Sunflower Field",
+        "autoFarmField": true,
+        "selectedField": "Mountain Top Field",
         "stinger": true,
         "glitter": true,
         "smoothie": true,
@@ -35,7 +35,7 @@
         "webhookDisconnect": true,
         "autoPuff": false,
         "autoSprinkler": false,
-        "sprinklerType": "Sprinkler Builder",
+        "sprinklerType": "The Supreme Saturator",
         "autoPrecise": false,
         "autoPreciseMark": false,
         "autoStickBug": false
