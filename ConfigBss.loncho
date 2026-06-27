@@ -1,8 +1,15 @@
 {
   "states": {
+    "autoFarmField": false,
+    "selectedField": "Sunflower Field",
+    "stinger": true,
     "glitter": true,
     "smoothie": true,
-    "stinger": true,
+    "tool": false,
+    "autoHoney": false,
+    "speed": false,
+    "antiAfk": true,
+    "fpsBoost": false,
     "redExtract": false,
     "blueExtract": false,
     "enzymes": false,
@@ -22,7 +29,16 @@
     "coconut": false,
     "honeysuckle": false,
     "festiveBean": true,
-    "snowflake": false
+    "snowflake": false,
+    "webhookUrl": "",
+    "webhookHoney": false,
+    "webhookDisconnect": true,
+    "autoPuff": false,
+    "autoSprinkler": false,
+    "sprinklerType": "Sprinkler Builder",
+    "autoPrecise": false,
+    "autoPreciseMark": false,
+    "autoStickBug": false
   },
   "times": {
     "glitter": 10,
@@ -35,7 +51,7 @@
     "glue": 60,
     "tropicalDrink": 60,
     "purplePotion": 60,
-    "gumdrops": 0,
+    "gumdrops": 0.5,
     "marshmallowBee": 1600,
     "jellyBeans": 31,
     "fieldDice": 45,
