@@ -36,9 +36,9 @@
         "autoPuff": false,
         "autoSprinkler": false,
         "sprinklerType": "The Supreme Saturator",
-        "autoPrecise": false,
-        "autoPreciseMark": false,
-        "autoStickBug": false
+        "autoPrecise": true,
+        "autoPreciseMark": true,
+        "autoStickBug": true
     },
     "times": {
         "glitter": 10,
