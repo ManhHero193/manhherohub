@@ -1,9 +1,9 @@
 {
     "states": {
         "autoFarmField": true,
-        "selectedField": "Spider Field",
+        "selectedField": "Strawberry Field",
         "autoPuff": false,
-        "autoSprinkler": false,
+        "autoSprinkler": true,
         "sprinklerType": "The Supreme Saturator",
         "autoHoney": false,
         "speed": true,
