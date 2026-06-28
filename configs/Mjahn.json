@@ -1,6 +1,6 @@
 {
     "states": {
-        "autoFarmField": true,
+        "autoFarmField": false,
         "selectedField": "Strawberry Field",
         "autoPuff": false,
         "autoSprinkler": true,
