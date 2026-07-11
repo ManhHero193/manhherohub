@@ -2345,15 +2345,21 @@ function Library:CreateWindow(Setting)
 					pairs = SortPairs or pairs
 					clear_object_in_list()
 					searchtable = {}
-					for i, v in pairs(ListNew) do
-						if Selected then
-							table.insert(searchtable, string.lower(i))
-						elseif Slider then
-							table.insert(searchtable, string.lower(v['Title']))
-						else
-							table.insert(searchtable, string.lower(v))
-						end
-					end
+				-- Thay thế đoạn vòng lặp cũ bằng đoạn này
+for i, v in pairs(ListNew) do
+    if Selected then
+        -- Sử dụng tostring() để ép kiểu, tránh lỗi boolean
+        table.insert(searchtable, string.lower(tostring(i)))
+    elseif Slider then
+        -- Sử dụng tostring() để đảm bảo Title luôn là string
+        local title = v['Title'] and tostring(v['Title']) or ""
+        table.insert(searchtable, string.lower(title))
+    else
+        -- Sử dụng tostring() cho v
+        table.insert(searchtable, string.lower(tostring(v)))
+    end
+end
+
 					if Selected then
                         for _, i in ipairs(OrderedList) do
                             local v = ListNew[i]
