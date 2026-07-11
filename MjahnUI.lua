@@ -2345,21 +2345,15 @@ function Library:CreateWindow(Setting)
 					pairs = SortPairs or pairs
 					clear_object_in_list()
 					searchtable = {}
-				-- Thay thế đoạn vòng lặp cũ bằng đoạn này
-for i, v in pairs(ListNew) do
-    if Selected then
-        -- Sử dụng tostring() để ép kiểu, tránh lỗi boolean
-        table.insert(searchtable, string.lower(tostring(i)))
-    elseif Slider then
-        -- Sử dụng tostring() để đảm bảo Title luôn là string
-        local title = v['Title'] and tostring(v['Title']) or ""
-        table.insert(searchtable, string.lower(title))
-    else
-        -- Sử dụng tostring() cho v
-        table.insert(searchtable, string.lower(tostring(v)))
-    end
-end
-
+					for i, v in pairs(ListNew) do
+						if Selected then
+							table.insert(searchtable, string.lower(i))
+						elseif Slider then
+							table.insert(searchtable, string.lower(v['Title']))
+						else
+							table.insert(searchtable, string.lower(v))
+						end
+					end
 					if Selected then
                         for _, i in ipairs(OrderedList) do
                             local v = ListNew[i]
@@ -2955,38 +2949,36 @@ end
 				end
 				-- THÊM ĐOẠN NÀY
                 function dropdownFunction:SetValue(value)
-    if not Selected then
-        -- Dropdown đơn lẻ (Giữ nguyên)
-        if table.find(ListNew, value) then
-            Sel.Value = value
-            if Search then Dropdowntitle.PlaceholderText = Title .. ': ' .. value
-            else Dropdowntitle.Text = Title .. ': ' .. value end
-            if Callback then Callback(value) end
-            refreshlist()
-        end
-    else
-
-        if type(value) == "table" then
-            for k in pairs(ListNew) do ListNew[k] = false end -- Reset tất cả
-            for _, v in pairs(value) do ListNew[v] = true end -- Đánh dấu chọn
-        -- Nếu truyền vào là string đơn lẻ
-        elseif ListNew[value] ~= nil then
-            ListNew[value] = not ListNew[value] -- Toggle chọn/bỏ
-        end
-
-        -- Cập nhật Text hiển thị
-        local selectedItems = {}
-        for k, v in pairs(ListNew) do if v then table.insert(selectedItems, k) end end
-        local displayStr = #selectedItems > 0 and table.concat(selectedItems, ", ") or "None"
-        
-        if Search then Dropdowntitle.PlaceholderText = Title .. ': ' .. displayStr
-        else Dropdowntitle.Text = Title .. ': ' .. displayStr end
-        
-        if Callback then Callback(value) end
-        refreshlist()
-    end
-end
-
+                    if not Selected then
+                        -- Dropdown đơn lẻ (single)
+                        if table.find(ListNew, value) then
+                            Sel.Value = value
+                            if Search then
+                                Dropdowntitle.PlaceholderText = Title .. ': ' .. value
+                            else
+                                Dropdowntitle.Text = Title .. ': ' .. value
+                            end
+                            if Callback then
+                                Callback(value)
+                            end
+                            refreshlist()
+                        end
+                    else
+                        -- Dropdown multi-select
+                        if ListNew[value] ~= nil then
+                            ListNew[value] = true
+                            if Search then
+                                Dropdowntitle.PlaceholderText = Title .. ': '
+                            else
+                                Dropdowntitle.Text = Title .. ': '
+                            end
+                            if Callback then
+                                Callback(value, true)
+                            end
+                            refreshlist()
+                        end
+                    end
+                end
                 
                 function dropdownFunction:GetValue()
                     if not Selected then
